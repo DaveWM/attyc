@@ -3,66 +3,16 @@
             [hickory.core :refer [parse parse-fragment as-hickory]]
             [hickory.zip :refer [hickory-zip]]
             [clojure.string :as str]
-            [cljs.reader :as reader]))
+            [angular-template-type-checker.hickory :refer [parse-html flatten-hickory]]
+            [angular-template-type-checker.typescript :refer [compile]]
+            [angular-template-type-checker.templates :refer [template-to-typescript]]))
 
 (set! js/DOMParser (.-DOMParser (node/require "xmldom")))
 (node/enable-util-print!)
 
-(def ts-node (-> (node/require "ts-node")
-                 (.register (clj->js {:project "./tsconfig.json"}))))
 (def glob (node/require "glob"))
 (def fs (node/require "fs"))
 (def command-line-args (node/require "command-line-args"))
-
-(defn get-compiler [filename]
-  (let [compile (-> (ts-node)
-                    (aget "compile"))]
-    (fn [code]
-      (compile code (str filename ".ts") 0))))
-
-
-(def test-html "
-  <!-- {:model \"model\" :type \"ModelType\" :import \"./main\"} -->
-  <p ng-model='model.x'>hello 
-  <span y='model.y'>world</span>
-  </p>")
-(def test-hickory (->> (parse test-html)
-                       as-hickory))
-
-
-(defn get-model-info [tags]
-  "Gets the metadata for a template. The metadata should be stored in the first comment tag in the template, in the form of a clojure map with keys :model, :type, and :import"
-  (let [comment-tag (->> tags
-                         (filter #(= :comment (:type %)))
-                         first)]
-    (reader/read-string (first (:content comment-tag)))))
-
-(defn flatten-hickory [hickory]
-  "flattens a hickory structure, and returns a seq of all tags"
-  (->> hickory
-       (tree-seq #(sequential? (:content %)) :content)))
-
-(defn get-attrs-for-model [tags model-info]
-  (->> tags
-       (mapcat :attrs)
-       (filter (fn [[attr value]]
-                 (str/includes? value (:model model-info))))
-       (map last)))
-
-(defn build-expression-typescript [expression {:keys [model type import]}]
-  (let [import-statement (when import (str "import {" type "} from '" import "';"))
-        function-str (str "function f (" model ": " type "){ " expression "; }")]
-    (str import-statement function-str)))
-
-(defn template-to-typescript [html]
-  (let [tags (->> (parse html)
-                  as-hickory
-                  flatten-hickory)
-        model-info (get-model-info tags)
-        attrs (get-attrs-for-model tags model-info)]
-    (->> attrs
-         (map (fn [attr]
-                (build-expression-typescript attr model-info))))))
 
 (defn get-file-contents [glob-pattern]
   (-> (js/Promise. (fn [res rej]
@@ -80,10 +30,11 @@
 (defn verify-template [html filename]
   (println "verifying " filename)
   (->> html
+       parse-html
        template-to-typescript
        (map (fn [ts-expr]
               (try
-                (do ((get-compiler filename) ts-expr)
+                (do (compile ts-expr filename)
                     nil)
                 (catch js/Error e e))))))
 
@@ -123,7 +74,7 @@
   (let [{:keys [glob] :as options} (js->clj (command-line-args cli-option-defs) :keywordize-keys true)]
     (-> (verify-templates glob)
         (.then process-results)
-        (.then #(.exit node/process (if % 0 1)))
+        ;(.then #(.exit node/process (if % 0 1)))
         )))
 
 (set! *main-cli-fn* -main)
