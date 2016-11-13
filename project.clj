@@ -31,20 +31,22 @@
   :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
   
   :cljsbuild {
-    :builds [{:id "dev"
-              :source-paths ["src"]
-              :figwheel true
-              :compiler {
-                :main angular-template-type-checker.core
-                :output-to "dist/main.js"
-                :output-dir "target/server_dev"
-                :target :nodejs
-                :optimizations :none
-                :source-map true}}
-             {:id "prod"
-              :source-paths ["src"]
-              :compiler {
-                :output-to "dist/main.min.js"
-                :output-dir "target/server_prod"
-                :target :nodejs
-                :optimizations :advanced}}]})
+              :builds [{:id "dev"
+                        :source-paths ["src"]
+                        :figwheel true
+                        :compiler {
+                                   :main angular-template-type-checker.core
+                                   :output-to "dist/main.js"
+                                   :output-dir "target/server_dev"
+                                   :target :nodejs
+                                   :optimizations :none
+                                   :source-map true}}
+                       {:id "prod"
+                        :source-paths ["src"]
+                        :compiler {
+                                   :main angular-template-type-checker.core
+                                   :output-to "dist/main.min.js"
+                                   :output-dir "dist"
+                                   :target :nodejs
+                                   :optimizations :simple
+                                   :source-map "dist/main.map.js"}}]})
