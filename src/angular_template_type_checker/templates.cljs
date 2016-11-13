@@ -24,7 +24,7 @@
                                 (-> (re-find #"\{\{(.*)\}\}" content)
                                     next)))
                       (filter identity))
-        exprs (concat bindings (map second attrs))]
+        exprs (concat (map (fn [b] [:ng-bind b]) bindings) attrs)]
     (build-typescript exprs model-info)))
 
 

@@ -13,9 +13,17 @@
 (defn compile [code filename]
   ((get-compiler filename) code))
 
-(defn build-typescript [expressions {:keys [model type import]}]
+(defn get-exprs-for-attr [[attr value]]
+  (let [ng-repeat-regex #"\S+\s+in\s+(\S+)(?:\s+track\s+by\s+\S+)?"]
+    (case attr
+      :ng-repeat (next (re-find ng-repeat-regex value))
+      [value])))
+
+(defn build-typescript [attributes {:keys [model type import]}]
   (let [import-statement (when import (str "import {" type "} from '" import "';"))
         build-function #(str "function " (gensym "func") " (" model ": " type "){ " % "; }")]
     (apply str
            import-statement
-           (map build-function expressions))))
+           (->> attributes
+                (mapcat get-exprs-for-attr)
+                (map build-function)))))
