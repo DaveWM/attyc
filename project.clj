@@ -9,20 +9,13 @@
                  [davewm/hickory "0.7.1-SNAPSHOT"]]
 
   :plugins [[lein-cljsbuild "1.1.4"]
-            [lein-figwheel "0.5.0-2"]
-            [lein-npm "0.6.2"]]
+            [lein-figwheel "0.5.0-2"]]
+            
 
   :source-paths ["src"]
 
   :clean-targets ["server.js"
                   "target"]
-
-  :npm {:dependencies [[ts-node "1.7.0"]
-                       [xmldom "0.1.22"]
-                       [typescript "2.0.9"]
-                       [glob "7.1.1"]
-                       [command-line-args "3.0.3"]]
-        :devDependencies [[ws "1.1.1"]]}
 
   :profiles {:dev {:dependencies [[com.cemerick/piggieback "0.2.1"]
                                   [figwheel-sidecar "0.5.2"]]

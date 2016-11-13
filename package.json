@@ -1,0 +1,30 @@
+{
+  "name": "attc",
+  "version": "0.0.1",
+  "description": "Command line app to verify types in an angularjs template",
+  "main": "index.js",
+  "dependencies": {
+    "command-line-args": "^3.0.3",
+    "glob": "^7.1.1",
+    "ts-node": "^1.7.0",
+    "typescript": "^2.0.9",
+    "xmldom": "^0.1.22"
+  },
+  "devDependencies": {
+    "ws": "^1.1.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DaveWM/angular-template-type-checker.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DaveWM/angular-template-type-checker/issues"
+  },
+  "homepage": "https://github.com/DaveWM/angular-template-type-checker#readme",
+  "bin": "./dist/main.min.js"
+}
