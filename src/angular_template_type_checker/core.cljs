@@ -96,7 +96,7 @@
 
 (defn process-results [results]
   (let [errored-files (->> results
-                           (map (fn [k results]
+                           (map (fn [[k results]]
                                   [k (filter identity results)]))
                            (filter (fn [[_ errors]]
                                      (not (empty? errors)))))]
