@@ -1,0 +1,16 @@
+/classes/
+/lib/
+/node_modules/
+/target/
+/dist/
+*~
+*#
+*.jar
+.lein-deps-sum
+.lein-repl-history
+.lein-plugins/
+figwheel_server.log
+pom.xml
+tsconfig.json
+**/*.ts
+**/*.tpl.html
