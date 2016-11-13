@@ -13,7 +13,9 @@
 (defn compile [code filename]
   ((get-compiler filename) code))
 
-(defn build-expression-typescript [expression {:keys [model type import]}]
+(defn build-typescript [expressions {:keys [model type import]}]
   (let [import-statement (when import (str "import {" type "} from '" import "';"))
-        function-str (str "function f (" model ": " type "){ " expression "; }")]
-    (str import-statement function-str)))
+        build-function #(str "function " (gensym "func") " (" model ": " type "){ " % "; }")]
+    (apply str
+           import-statement
+           (map build-function expressions))))

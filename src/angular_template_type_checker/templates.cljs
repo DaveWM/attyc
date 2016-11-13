@@ -2,7 +2,7 @@
   (:require [cljs.reader :as reader]
             [clojure.string :as str]
             [angular-template-type-checker.hickory :refer [flatten-hickory get-all-attrs]]
-            [angular-template-type-checker.typescript :refer [build-expression-typescript]]))
+            [angular-template-type-checker.typescript :refer [build-typescript]]))
 
 (defn get-model-info [tags]
   "Gets the metadata for a template. The metadata should be stored in the first comment tag in the template, in the form of a clojure map with keys :model, :type, and :import"
@@ -18,8 +18,6 @@
         model-info (get-model-info tags)
         attrs (get-all-attrs tags (filter (fn [[attr value]]
                                             (str/includes? value (:model model-info)))))]
-    (->> attrs
-         (map (fn [attr]
-                (build-expression-typescript attr model-info))))))
+    (build-typescript attrs model-info)))
 
 

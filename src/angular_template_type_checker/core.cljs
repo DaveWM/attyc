@@ -29,14 +29,13 @@
 
 (defn verify-template [html filename]
   (println "verifying " filename)
-  (->> html
-       parse-html
-       template-to-typescript
-       (map (fn [ts-expr]
-              (try
-                (do (compile ts-expr filename)
-                    nil)
-                (catch js/Error e e))))))
+  (let [typescript (->> html
+                        parse-html
+                        template-to-typescript)]
+    (try
+      (do (compile typescript filename)
+          nil)
+      (catch js/Error e e))))
 
 (defn verify-templates [glob-pattern]
   (-> (get-file-contents glob-pattern)
@@ -48,17 +47,14 @@
 
 (defn process-results [results]
   (let [errored-files (->> results
-                           (map (fn [[k results]]
-                                  [k (filter identity results)]))
                            (filter (fn [[_ errors]]
-                                     (not (empty? errors)))))]
+                                     errors)))]
     (if (not (empty? errored-files))
       (do (println "Some templates failed the type check:\r\n")
           (doseq [[filename errors] errored-files]
             (println filename)
             (println "------")
-            (doseq [error (filter identity errors)]
-              (println error))
+            (println errors)
             (println))
           false)
       (do (println (str (count results) " files verified"))
@@ -74,7 +70,7 @@
   (let [{:keys [glob] :as options} (js->clj (command-line-args cli-option-defs) :keywordize-keys true)]
     (-> (verify-templates glob)
         (.then process-results)
-        ;(.then #(.exit node/process (if % 0 1)))
+        (.then #(.exit node/process (if % 0 1)))
         )))
 
 (set! *main-cli-fn* -main)
