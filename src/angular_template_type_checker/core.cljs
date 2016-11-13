@@ -78,6 +78,7 @@
                     (.all js/Promise))))))
 
 (defn verify-template [html filename]
+  (println "verifying " filename)
   (->> html
        template-to-typescript
        (map (fn [ts-expr]
@@ -87,7 +88,7 @@
                 (catch js/Error e e))))))
 
 (defn verify-templates [glob-pattern]
-  (-> (get-file-contents "**/*.tpl.html")
+  (-> (get-file-contents glob-pattern)
       (.then (fn [data]
                (->> data
                     (map (fn [[template-html filename]]
@@ -120,8 +121,9 @@
 
 (defn -main []
   (let [{:keys [glob] :as options} (js->clj (command-line-args cli-option-defs) :keywordize-keys true)]
-    (-> (verify-templates "**/*.tpl.html")
+    (-> (verify-templates glob)
         (.then process-results)
-        (.then #(.exit node/process (if % 0 1))))))
+        (.then #(.exit node/process (if % 0 1)))
+        )))
 
 (set! *main-cli-fn* -main)
