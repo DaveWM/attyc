@@ -31,11 +31,17 @@
                      (cons expr
                            (mapcat #(rest (str/split % ":")) filters))))))))
 
-(defn build-typescript [attributes {:keys [model type import]}]
-  (let [import-statement (when import (str "import {" type "} from '" import "';"))
-        build-function #(str "function " (gensym "func") " (" model ": " type "){ return " % "; }")]
-    (apply str
-           import-statement
-           (->> attributes
-                (mapcat get-exprs-for-attr)
-                (map build-function)))))
+(defn build-typescript [attributes metadata]
+  (let [import-statements (->> (filter :import metadata)
+                               (group-by :import)
+                               (map (fn [[import metadata]]
+                                      (str "import {" (str/join ", " (map :type metadata)) "} from '" import "';"))))
+        function-args (->> metadata
+                           (map #(str (:name %) ": " (:type %)))
+                           (str/join ", "))
+        build-function #(str "function " (gensym "func") " (" function-args "){ return " % "; }")]
+    (->> (concat import-statements
+                 (->> attributes
+                      (mapcat get-exprs-for-attr)
+                      (map build-function)))
+         (apply str))))

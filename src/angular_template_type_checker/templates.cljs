@@ -4,8 +4,8 @@
             [angular-template-type-checker.hickory :refer [flatten-hickory get-all-attrs get-all-text-content]]
             [angular-template-type-checker.typescript :refer [build-typescript]]))
 
-(defn get-model-info [tags]
-  "Gets the metadata for a template. The metadata should be stored in the first comment tag in the template, in the form of a clojure map with keys :model, :type, and :import"
+(defn get-metadata [tags]
+  "Gets the metadata for a template. The metadata should be stored in the first comment tag in the template, in the form of an edn array of maps with keys :name, :type and optionally :import (TODO: write spec for this)"
   (let [comment-tag (->> tags
                          (filter #(= :comment (:type %)))
                          first)
@@ -15,16 +15,17 @@
 
 (defn template-to-typescript [hickory]
   (let [tags (flatten-hickory hickory)
-        model-info (get-model-info tags)
+        metadata (get-metadata tags)
         attrs (->> (get-all-attrs tags)
                    (filter (fn [[attr value]]
-                             (str/includes? value (:model model-info)))))
+                             (->> (map :name metadata)
+                                  (some? #(str/includes? value %))))))
         bindings (->> (get-all-text-content tags)
                       (mapcat (fn [content]
                                 (-> (re-find #"\{\{(.*)\}\}" content)
                                     next)))
                       (filter identity))
-        exprs (concat (map (fn [b] [:ng-bind b]) bindings) attrs)]
-    (build-typescript exprs model-info)))
+        exprs (concat (map (fn [b] [nil b]) bindings) attrs)]
+    (build-typescript exprs metadata)))
 
 
