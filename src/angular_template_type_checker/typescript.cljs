@@ -14,11 +14,18 @@
 (defn compile [code filename]
   ((get-compiler filename) code))
 
+(defn extract-bindings [text]
+  "gets a sequence of bindings (bits in curly braces) from some text, or returns nil if there aren't any"
+  (let [curly-brace-regex #"\{\{\s*(.*?)\s*\}\}"]
+    (->> (re-seq curly-brace-regex text)
+         (mapcat rest)
+         not-empty)))
+
 (defn get-exprs-for-attr [[attr value]]
   (let [ng-repeat-regex #"\S+\s+in\s+(.*)"]
     (->> (case attr
            :ng-repeat (rest (re-find ng-repeat-regex value)) ; remove the "x in" bit from the ng-repeat
-           [value])
+           (or (extract-bindings value) [value]))
          (mapcat (fn [ng-expr]
                    (let [[expr & filters] (str/split ng-expr "|")]
                      (cons expr
