@@ -26,7 +26,7 @@
 
 (defn build-typescript [attributes {:keys [model type import]}]
   (let [import-statement (when import (str "import {" type "} from '" import "';"))
-        build-function #(str "function " (gensym "func") " (" model ": " type "){ " % "; }")]
+        build-function #(str "function " (gensym "func") " (" model ": " type "){ return " % "; }")]
     (apply str
            import-statement
            (->> attributes
