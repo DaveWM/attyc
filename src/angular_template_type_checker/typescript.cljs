@@ -3,7 +3,8 @@
             [clojure.string :as str]))
 
 (def ts-node (-> (node/require "ts-node")
-                 (.register (clj->js {:project "./tsconfig.json"}))))
+                 (.register (clj->js {:project "./tsconfig.json"
+                                      :compilerOptions {:allowUnreachableCode true}}))))
 
 (defn get-compiler [filename]
   (let [compile (-> (ts-node)
