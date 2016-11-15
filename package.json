@@ -1,5 +1,5 @@
 {
-  "name": "attc",
+  "name": "attyc",
   "version": "0.0.4",
   "description": "Command line app to verify types in an angularjs template",
   "main": "index.js",
