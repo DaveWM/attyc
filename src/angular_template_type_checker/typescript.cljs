@@ -1,6 +1,7 @@
 (ns angular-template-type-checker.typescript
   (:require [cljs.nodejs :as node]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [angular-template-type-checker.string :refer [split-by-non-repeated]]))
 
 (def ts-node (-> (node/require "ts-node")
                  (.register (clj->js {:project "./tsconfig.json"
@@ -31,7 +32,7 @@
                       (rest (re-find regex value))) ; remove the "x in" bit from the ng-repeat
          (or (extract-bindings value) [value]))
        (mapcat (fn [ng-expr]
-                 (let [[expr & filters] (str/split ng-expr "|")]
+                 (let [[expr & filters] (split-by-non-repeated ng-expr \|)]
                    (cons expr
                          (mapcat #(rest (str/split % ":")) filters)))))))
 
