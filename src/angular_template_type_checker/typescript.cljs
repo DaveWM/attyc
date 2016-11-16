@@ -45,7 +45,7 @@
     :ng-init value
     nil))
 
-(defn build-typescript [attributes metadata]
+(defn build-typescript [metadata attributes]
   (let [import-statements (->> (filter :import metadata)
                                (group-by :import)
                                (map (fn [[import metadata]]

@@ -4,8 +4,7 @@
 
 (defn flatten-hickory [hickory]
   "flattens a hickory structure, and returns a seq of all tags"
-  (->> hickory
-       (tree-seq #((every-pred sequential? (complement string?)) (:content %)) :content)))
+  (tree-seq :content :content hickory))
 
 (defn parse-html [html]
   (->> html
@@ -13,11 +12,7 @@
        as-hickory))
 
 (defn get-all-attrs [tags]
-  (->> tags
-       (mapcat :attrs)))
+  (mapcat :attrs tags))
 
 (defn get-all-text-content [tags]
-  (->> tags
-       (filter #(= :element (:type %)))
-       (mapcat :content)
-       (filter string?)))
+  (filter string? tags))

@@ -4,8 +4,8 @@
             [hickory.zip :refer [hickory-zip]]
             [clojure.string :as str]
             [angular-template-type-checker.hickory :refer [parse-html flatten-hickory]]
-            [angular-template-type-checker.typescript :refer [compile]]
-            [angular-template-type-checker.templates :refer [template-to-typescript]]))
+            [angular-template-type-checker.typescript :refer [compile build-typescript]]
+            [angular-template-type-checker.templates :refer [extract-expressions extract-metadata]]))
 
 (set! js/DOMParser (.-DOMParser (node/require "xmldom")))
 (node/enable-util-print!)
@@ -29,13 +29,19 @@
 
 (defn verify-template [html filename]
   (println "verifying " filename)
-  (let [typescript (->> html
-                        parse-html
-                        template-to-typescript)]
-    (try
-      (do (compile typescript filename)
-          nil)
-      (catch js/Error e e))))
+  (let [tags (->> html
+                  parse-html
+                  flatten-hickory)
+        metadata (extract-metadata tags)
+        typescript (->> tags
+                        (extract-expressions (map :name metadata))
+                        (build-typescript metadata))]
+    (if (nil? metadata)
+      (js/Error. "Could not find metadata")
+      (try
+        (do (compile typescript filename)
+            nil)
+        (catch js/Error e e)))))
 
 (defn verify-templates [glob-pattern]
   (-> (get-file-contents glob-pattern)
