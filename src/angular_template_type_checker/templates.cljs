@@ -22,6 +22,11 @@
     (->> (re-seq curly-brace-regex text)
          (mapcat rest))))
 
+(defn extract-filter-expressions [ng-expr]
+  (let [[expr & filters] (split-by-non-repeated ng-expr \|)]
+    (cons expr
+          (mapcat #(rest (str/split % ":")) filters))))
+
 (defn get-attr-global-scope-expr [[attr value]]
   (case attr
     :ng-repeat (let [regex #"(\S+)\s+in\s+([^\s\|]+)"
@@ -40,11 +45,7 @@
   (->> (case attr
          :ng-repeat (let [regex #"\S+\s+in\s+(.*)"]
                       (rest (re-find regex value))) ; remove the "x in" bit from the ng-repeat
-         (or (extract-bindings value) [value]))
-       (mapcat (fn [ng-expr]
-                 (let [[expr & filters] (split-by-non-repeated ng-expr \|)]
-                   (cons expr
-                         (mapcat #(rest (str/split % ":")) filters)))))))
+         (or (extract-bindings value) [value]))))
 
 (defn extract-local-scope-exprs [variables tags]
   "Extract all expressions that are assumed to have their own scope (i.e. variable declarations don't affect other expressions)"
@@ -59,6 +60,7 @@
                                             [value])))))
         bindings-expressions (->> (get-all-text-content tags)
                                   (mapcat extract-bindings))]
-    (concat attr-expressions bindings-expressions)))
+    (->> (concat attr-expressions bindings-expressions)
+         (mapcat extract-filter-expressions))))
 
 
