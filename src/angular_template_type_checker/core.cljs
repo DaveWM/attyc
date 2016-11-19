@@ -5,7 +5,7 @@
             [clojure.string :as str]
             [angular-template-type-checker.hickory :refer [parse-html flatten-hickory]]
             [angular-template-type-checker.typescript :refer [compile build-typescript]]
-            [angular-template-type-checker.templates :refer [extract-expressions extract-metadata]]))
+            [angular-template-type-checker.templates :refer [extract-local-scope-exprs extract-global-scope-exprs extract-metadata]]))
 
 (set! js/DOMParser (.-DOMParser (node/require "xmldom")))
 (node/enable-util-print!)
@@ -34,8 +34,8 @@
                   flatten-hickory)
         metadata (extract-metadata tags)
         typescript (->> tags
-                        (extract-expressions (map :name metadata))
-                        (build-typescript metadata))]
+                        ((juxt extract-local-scope-exprs extract-global-scope-exprs) (map :name metadata))
+                        (apply build-typescript metadata))]
     (if (nil? metadata)
       (js/Error. "Could not find metadata")
       (try
