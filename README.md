@@ -1,5 +1,7 @@
 # ATTyC
 
+### Pre-Alpha
+
 **A**ngular**T**emplate**Ty**pe**C**hecker is a command line tool that uses typescript to verify angularjs templates. You supply the names and types of the variables that the template uses, and attyc will find any bugs in your template.
 
 *Note*: Attyc isn't intended to conclusively prove that a template is correct, AFAIK this is impossible in angularjs. Its goal is to give you a bit more confidence that the template is correct. If you want absolute confidence that your templates don't contain errors, upgrade to angular 2 and use the AOT compiler.
