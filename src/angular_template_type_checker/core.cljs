@@ -3,6 +3,7 @@
             [hickory.core :refer [parse parse-fragment as-hickory]]
             [hickory.zip :refer [hickory-zip]]
             [clojure.string :as str]
+            [clojure.spec :as s]
             [angular-template-type-checker.hickory :refer [parse-html flatten-hickory]]
             [angular-template-type-checker.typescript :refer [compile build-typescript]]
             [angular-template-type-checker.templates :refer [extract-local-scope-exprs extract-global-scope-exprs extract-metadata]]))
@@ -13,6 +14,14 @@
 (def glob (node/require "glob"))
 (def fs (node/require "fs"))
 (def command-line-args (node/require "command-line-args"))
+
+(s/def :metadata/name string?)
+(s/def :metadata/type string?)
+(s/def :metadata/import string?)
+(s/def :metadata/variable (s/keys
+                           :req-un [:metadata/name :metadata/type]
+                           :opt-un [:metadata/import]))
+(def metadata-spec (s/+ :metadata/variable))
 
 (defn get-file-contents [glob-pattern]
   (-> (js/Promise. (fn [res rej]
@@ -27,6 +36,13 @@
                                                                   (if err (rej) (res [contents %])))))))
                     (.all js/Promise))))))
 
+(defn check-metadata [metadata]
+  "Checks whether the given metadata is valid. Returns nil if it is, or an error string if not"
+  (if (nil? metadata)
+    "Could not find metadata"
+    (when-let [spec-error (s/explain-data metadata-spec metadata)]
+      (str "Error with metadata: " (:cljs.spec/problems spec-error)))))
+
 (defn verify-template [html filename]
   (println "verifying " filename)
   (let [tags (->> html
@@ -36,12 +52,12 @@
         typescript (->> tags
                         ((juxt extract-local-scope-exprs extract-global-scope-exprs) (map :name metadata))
                         (apply build-typescript metadata))]
-    (if (nil? metadata)
-      (js/Error. "Could not find metadata")
+    (if-let [error (check-metadata metadata)]
+      error
       (try
         (do (compile typescript filename)
             nil)
-        (catch js/Error e e)))))
+        (catch js/Error e (.-message e))))))
 
 (defn verify-templates [glob-pattern]
   (-> (get-file-contents glob-pattern)
@@ -53,14 +69,14 @@
 
 (defn process-results [results]
   (let [errored-files (->> results
-                           (filter (fn [[_ errors]]
-                                     errors)))]
+                           (filter (fn [[_ error]]
+                                     error)))]
     (if (not (empty? errored-files))
       (do (println "Some templates failed the type check:\r\n")
-          (doseq [[filename errors] errored-files]
+          (doseq [[filename error] errored-files]
             (println filename)
             (println "------")
-            (println errors)
+            (println error)
             (println))
           false)
       (do (println (str (count results) " files verified"))

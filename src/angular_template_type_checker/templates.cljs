@@ -6,7 +6,7 @@
             [angular-template-type-checker.string :refer [split-by-non-repeated]]))
 
 (defn extract-metadata [tags]
-  "Gets the metadata for a template. The metadata should be stored in the first comment tag in the template, in the form of an edn array of maps with keys :name, :type and optionally :import (TODO: write spec for this)"
+  "Gets the metadata for a template. The metadata should be stored in the first comment tag in the template"
   (let [comment-tag (->> tags
                          (filter #(= :comment (:type %)))
                          first)
