@@ -1,7 +1,9 @@
 (ns angular-template-type-checker.typescript
   (:require [cljs.nodejs :as node]
             [clojure.string :as str]
-            [angular-template-type-checker.string :refer [split-by-non-repeated]]))
+            [cljs.spec :as s]
+            [angular-template-type-checker.string :refer [split-by-non-repeated]]
+            [angular-template-type-checker.specs :refer [metadata-spec]]))
 
 (def ts-node (-> (node/require "ts-node")
                  (.register (clj->js {:project "./tsconfig.json"
@@ -33,3 +35,8 @@
                  function-statements
                  ["}"])
          (apply str))))
+(s/fdef build-typescript
+        :args (s/alt :metadata metadata-spec
+                     :expressions (s/+ string?)
+                     :global-expressions (s/* string?))
+        :ret string?)

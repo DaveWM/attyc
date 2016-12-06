@@ -6,7 +6,9 @@
 
   :dependencies [[org.clojure/clojure "1.9.0-alpha14"]
                  [org.clojure/clojurescript "1.9.293"]
-                 [davewm/hickory "0.7.1-SNAPSHOT"]]
+                 [davewm/hickory "0.7.1-SNAPSHOT"]
+                 [org.clojure/test.check "0.9.0"] ; needed due to this bug: http://dev.clojure.org/jira/browse/CLJS-1792?page=com.atlassian.jira.plugin.system.issuetabpanels:changehistory-tabpanel
+                 ]
 
   :plugins [[lein-cljsbuild "1.1.4"]
             [lein-figwheel "0.5.0-2"]]

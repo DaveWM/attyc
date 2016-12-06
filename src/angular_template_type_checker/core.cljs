@@ -3,25 +3,17 @@
             [hickory.core :refer [parse parse-fragment as-hickory]]
             [hickory.zip :refer [hickory-zip]]
             [clojure.string :as str]
-            [clojure.spec :as s]
+            [cljs.spec :as s]
             [angular-template-type-checker.hickory :refer [parse-html flatten-hickory]]
             [angular-template-type-checker.typescript :refer [compile build-typescript]]
-            [angular-template-type-checker.templates :refer [extract-local-scope-exprs extract-global-scope-exprs extract-metadata]]))
+            [angular-template-type-checker.templates :refer [extract-local-scope-exprs extract-global-scope-exprs extract-metadata]]
+            [angular-template-type-checker.specs :refer [metadata-spec]]))
 
 (set! js/DOMParser (.-DOMParser (node/require "xmldom")))
 (node/enable-util-print!)
-
 (def glob (node/require "glob"))
 (def fs (node/require "fs"))
 (def command-line-args (node/require "command-line-args"))
-
-(s/def :metadata/name string?)
-(s/def :metadata/type string?)
-(s/def :metadata/import string?)
-(s/def :metadata/variable (s/keys
-                           :req-un [:metadata/name :metadata/type]
-                           :opt-un [:metadata/import]))
-(def metadata-spec (s/+ :metadata/variable))
 
 (defn get-file-contents [glob-pattern]
   (-> (js/Promise. (fn [res rej]
@@ -81,6 +73,9 @@
           false)
       (do (println (str (count results) " files verified"))
           true))))
+(s/fdef process-results
+        :args (s/alt :results (s/map-of string? number?))
+        :ret boolean?)
 
 (def cli-option-defs
   (clj->js [{:name "glob"
