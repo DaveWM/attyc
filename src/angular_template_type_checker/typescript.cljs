@@ -36,7 +36,7 @@
                  ["}"])
          (apply str))))
 (s/fdef build-typescript
-        :args (s/alt :metadata metadata-spec
+        :args (s/cat :metadata metadata-spec
                      :expressions (s/+ string?)
                      :global-expressions (s/* string?))
         :ret string?)
