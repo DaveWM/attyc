@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "command-line-args": "^3.0.3",
+    "command-line-usage": "^3.0.8",
     "glob": "^7.1.1",
     "ts-node": "^1.7.0",
     "typescript": "^2.0.9",
