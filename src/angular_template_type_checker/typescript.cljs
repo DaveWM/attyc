@@ -31,7 +31,7 @@
         function-statements (map build-function expressions)]
     (->> (concat import-statements
                  [(str (build-function-declaration) "{")]
-                 global-exprs
+                 (map #(str % ";") global-exprs)
                  function-statements
                  ["}"])
          (apply str))))
