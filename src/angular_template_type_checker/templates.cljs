@@ -3,7 +3,8 @@
             [clojure.string :as str]
             [angular-template-type-checker.hickory :refer [flatten-hickory get-all-attrs get-all-text-content]]
             [angular-template-type-checker.typescript :refer [build-typescript]]
-            [angular-template-type-checker.string :refer [split-by-non-repeated]]))
+            [angular-template-type-checker.string :refer [split-by-non-repeated]]
+            [instaparse.core :as insta]))
 
 (defn extract-metadata [tags]
   "Gets the metadata for a template. The metadata should be stored in the first comment tag in the template"
@@ -62,5 +63,46 @@
                                   (mapcat extract-bindings))]
     (->> (concat attr-expressions bindings-expressions)
          (mapcat extract-filter-expressions))))
+
+
+(def template-expression-parser
+  (insta/parser "<S> = ' '* '{{' ' '* template-expr ' '* '}}' ' '*
+                 <variable> = symbol | string | array | map
+                 <symbol> = #'[\\w\\$]+'
+                 <string> = #'\\'[^\\']*\\'' | #'\\\"[^\\\"]*\\\"'
+                 <array> = '[' ((' '* variable ' '*) (',' ' '* variable ' '*)*)? ']' 
+                 <map> = '{' (kvp (',' ' '* kvp)*)? '}'
+                 <kvp> = (variable | string) ' '* ':' ' '* variable
+                 <tuple> = <'(' ' '*> variable <',' ' '*> variable <' '* ')'>
+                 expr =  (chain | op-chain) | <'(' ' '*> (chain | op-chain) <' '* ')'>
+                 <chain> = (variable | function) ('.' chain)?
+                 <operator> = '+' | '-' | '*' | '/' | '%'
+                 <op-chain> = chain ' '* operator ' '* chain
+                 <function> = variable '(' ' '* function-args ' '* ')'
+                 <function-args> = chain?
+                 filter = <' '* '|' ' '* #'\\w+' ' '* ':' ' '*> expr
+                 <template-expr> = expr (filter | expr)*"))
+
+
+(def ng-repeat-parser
+  (insta/parser "<S> = binding <' '+ 'in' ' '+> template-expr (track-by | alias)?
+                 track-by = <' '+ 'track by' ' '+> expr
+                 alias = <' '+ 'as' ' '*> expr
+                 binding = (variable | tuple)
+                 <variable> = symbol | string | array | map
+                 <symbol> = #'[\\w\\$]+'
+                 <string> = #'\\'[^\\']*\\'' | #'\\\"[^\\\"]*\\\"'
+                 <array> = '[' ((' '* variable ' '*) (',' ' '* variable ' '*)*)? ']' 
+                 <map> = '{' (kvp (',' ' '* kvp)*)? '}'
+                 <kvp> = (variable | string) ' '* ':' ' '* variable
+                 <tuple> = <'(' ' '*> variable <',' ' '*> variable <' '* ')'>
+                 expr =  (chain | op-chain) | <'(' ' '*> (chain | op-chain) <' '* ')'>
+                 <chain> = (variable | function) ('.' chain)?
+                 <operator> = '+' | '-' | '*' | '/' | '%'
+                 <op-chain> = chain ' '* operator ' '* chain
+                 <function> = variable '(' ' '* function-args ' '* ')'
+                 <function-args> = chain?
+                 filter = <' '* '|' ' '* #'\\w+' ' '* ':' ' '*> expr
+                 <template-expr> = expr (filter | expr)+"))
 
 
