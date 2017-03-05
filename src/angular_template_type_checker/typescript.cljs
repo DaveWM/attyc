@@ -30,7 +30,7 @@
         build-function #(str (build-function-declaration) "{ return " % "; };")
         function-statements (map build-function expressions)]
     (->> (concat import-statements
-                 [(str (build-function-declaration) "{")]
+                 [(build-function-declaration) "{"]
                  (map #(str % ";") global-exprs)
                  function-statements
                  ["}"])
