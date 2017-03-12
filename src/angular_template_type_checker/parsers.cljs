@@ -11,7 +11,7 @@
    <tuple> = <'(' ' '*> variable <',' ' '*> variable <' '* ')'>
    expr =  operation | <'(' ' '*> operation <' '* ')'>
    <chain> = (variable | function) ('.' chain)?
-   <operator> = '+' | '-' | '*' | '/' | '%' | '=' | '==' | '===' | '||' | '&&'
+   <operator> = '+' | '-' | '*' | '/' | '%' | '=' | '==' | '===' | '||' | '&&' | '>' | '>=' | '<' | '<='
    <op-chain> = chain ' '* operator ' '* chain
    <operation> = chain | op-chain
    <function> = variable '(' ' '* function-args ' '* ')'
