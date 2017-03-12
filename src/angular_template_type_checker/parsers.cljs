@@ -10,10 +10,12 @@
    <kvp> = (variable | string) ' '* ':' ' '* variable
    <tuple> = <'(' ' '*> variable <',' ' '*> variable <' '* ')'>
    expr =  operation | <'(' ' '*> operation <' '* ')'>
-   <chain> = (variable | function) ('.' chain)?
    <operator> = '+' | '-' | '*' | '/' | '%' | '=' | '==' | '===' | '||' | '&&' | '>' | '>=' | '<' | '<='
-   <op-chain> = chain ' '* operator ' '* chain
-   <operation> = chain | op-chain
+   <prefix-operator> = '+' | '-' | '!'
+   <chain> = (variable | function) ('.' chain)?
+   <op-chain> = prefixed-chain ' '* operator ' '* prefixed-chain
+   <prefixed-chain> = prefix-operator* chain
+   <operation> = prefixed-chain | op-chain
    <function> = variable '(' ' '* function-args ' '* ')'
    <function-args> = operation? (<' '* ',' ' '*> operation)*  
    filter = <' '* '|' ' '* symbol ' '* ':' ' '*> expr
