@@ -29,13 +29,13 @@
 
 
 (def ng-repeat-parser
-  (insta/parser (str "ng-repeat = binding-symbols <' '+ 'in' ' '+> binding-expr (track-by | alias)?
+  (insta/parser (str "binding-expr = binding-symbols <' '+ 'in' ' '+> binding-value (track-by | alias)?
                      track-by = <' '+ 'track by' ' '+> expr
                      alias = <' '+ 'as' ' '*> expr
                      binding-symbols = (variable | tuple);
-                     binding-expr = template-expr"
+                     binding-value = template-expr"
                      angular-expression-ebnf)))
 
 (def single-expression-parser
-  (insta/parser (str "ng-attr = template-expr;"
+  (insta/parser (str "ng-expr = <' '*> template-expr <' '*>;"
                      angular-expression-ebnf)))

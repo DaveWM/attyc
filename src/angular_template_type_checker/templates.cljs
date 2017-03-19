@@ -1,13 +1,14 @@
 (ns angular-template-type-checker.templates
   (:require [cljs.reader :as reader]
             [clojure.string :as cstr]
-            [angular-template-type-checker.hickory :refer [flatten-hickory get-all-attrs get-all-text-content get-all-tags-of-type]]
+            [angular-template-type-checker.hickory :refer [flatten-hickory get-all-attrs get-all-text-content]]
+            [angular-template-type-checker.hiccup :refer [get-all-tags-of-type]]
             [angular-template-type-checker.typescript :refer [build-typescript]]
             [angular-template-type-checker.string :refer [split-by-non-repeated]]
             [angular-template-type-checker.parsers :refer [template-expression-parser ng-repeat-parser single-expression-parser]]
-            [hickory.select :as s]
-            [hickory.convert :refer [hiccup-to-hickory]]
             [instaparse.core :as insta]))
+
+(def ng-global-attrs #{:ng-repeat :ng-init})
 
 (def ng-attr-parsers (merge  {:ng-repeat ng-repeat-parser}
                              (zipmap [:ng-init :ng-bind :ng-change :ng-if :ng-switch :ng-model :ng-show :ng-hide :ng-style :ng-submit :ng-value :ng-required]
@@ -35,7 +36,9 @@
   (->> (:attrs tag)
        (map (fn [[k v]]
               (when-let [parser (k ng-attr-parsers)]
-                (parser v))))
+                (if (ng-global-attrs k)
+                  [:global (parser v)]
+                  (parser v)))))
        (remove nil?)))
 
 (defn extract-attr-expressions-for-variable [tag var-name]
@@ -45,8 +48,6 @@
               (let [parsed (single-expression-parser attr :unhide :tags)]
                 (when (and (not (insta/failure? parsed))
                            (->> parsed
-                                (conj [])
-                                hiccup-to-hickory
                                 (get-all-tags-of-type :symbol)
                                 (mapcat :content)
                                 (some #(= % var-name))))
@@ -56,7 +57,6 @@
 (defn extract-expressions [tag var-names]
   (concat (extract-curly-brace-expressions tag)
           (extract-ng-attr-expressions tag)
-          (mapcat (partial extract-attr-expressions-for-variable tag) var-names)
-   ))
+          (mapcat (partial extract-attr-expressions-for-variable tag) var-names)))
 
 
