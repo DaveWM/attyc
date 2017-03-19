@@ -3,7 +3,9 @@
             [clojure.string :as str]
             [cljs.spec :as s]
             [angular-template-type-checker.string :refer [split-by-non-repeated]]
-            [angular-template-type-checker.specs :refer [metadata-spec]]))
+            [angular-template-type-checker.specs :refer [metadata-spec]]
+            [angular-template-type-checker.hickory :refer [get-all-tags-of-type]]
+            [hickory.convert :refer [hiccup-to-hickory]]))
 
 (def ts-node (-> (node/require "ts-node")
                  (.register (clj->js {:project "./tsconfig.json"
@@ -15,10 +17,25 @@
     (fn [code]
       (compile code (str filename ".ts") 0))))
 
-(defn compile [code filename]
-  ((get-compiler filename) code))
+(defn try-compile [code filename]
+  "returns nil or an error"
+  (try (do ((get-compiler filename) code)
+           nil)
+       (catch js/Error e (.-message e))))
 
-(defn build-typescript [metadata expressions global-exprs]
+(defn get-global-ts-expr [angular-expression-tree]
+  (when-let [[root-tag] angular-expression-tree]
+    (condp = root-tag
+      :ng-repeat (let [[_ [_ & binding-symbols] [_ [_ & first-expr-parts]]] angular-expression-tree
+                       binding-expression (apply str first-expr-parts)]
+                   (condp = (count binding-symbols)
+                     ; assume filters don't change the structure of the initial expression result
+                     1 (str "let " (first binding-symbols) " = " binding-expression "[0];")
+                     2 (str "let " (first binding-symbols) ": string; let " (second binding-symbols) ": any;")
+                     nil))
+      nil)))
+
+(defn build-typescript [metadata angular-expression-trees]
   (let [import-statements (->> (filter :import metadata)
                                (group-by :import)
                                (map (fn [[import metadata]]
@@ -28,15 +45,20 @@
                            (str/join ", "))
         build-function-declaration #(str "let " (gensym "func") " = function (" function-args ")")
         build-function #(str (build-function-declaration) "{ return " % "; };")
-        function-statements (map build-function expressions)]
+        expressions (when (not-empty angular-expression-trees)
+                      (->> angular-expression-trees
+                           hiccup-to-hickory
+                           (get-all-tags-of-type :expr)
+                           (map :content)
+                           (map (partial apply str))))
+        expression-functions (->> expressions
+                                  (map build-function))
+        global-exprs (->> angular-expression-trees
+                          (map get-global-ts-expr)
+                          (remove nil?))]
     (->> (concat import-statements
                  [(build-function-declaration) "{"]
-                 (map #(str % ";") global-exprs)
-                 function-statements
+                 global-exprs
+                 expression-functions
                  ["}"])
          (apply str))))
-(s/fdef build-typescript
-        :args (s/cat :metadata metadata-spec
-                     :expressions (s/+ string?)
-                     :global-expressions (s/* string?))
-        :ret string?)

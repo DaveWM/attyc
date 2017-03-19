@@ -5,9 +5,10 @@
             [clojure.string :as str]
             [cljs.spec :as s]
             [angular-template-type-checker.hickory :refer [parse-html flatten-hickory]]
-            [angular-template-type-checker.typescript :refer [compile build-typescript]]
-            [angular-template-type-checker.templates :refer [extract-local-scope-exprs extract-global-scope-exprs extract-metadata]]
-            [angular-template-type-checker.specs :refer [metadata-spec]])
+            [angular-template-type-checker.typescript :refer [try-compile build-typescript]]
+            [angular-template-type-checker.templates :refer [extract-expressions extract-metadata]]
+            [angular-template-type-checker.specs :refer [metadata-spec]]
+            [instaparse.core :as insta])
   (:require-macros [angular-template-type-checker.macros :refer [def-cli-opts]]))
 
 (set! js/DOMParser (.-DOMParser (node/require "xmldom")))
@@ -43,15 +44,17 @@
                   parse-html
                   flatten-hickory)
         metadata (extract-metadata tags)
-        typescript (->> tags
-                        ((juxt extract-local-scope-exprs extract-global-scope-exprs) (map :name metadata))
-                        (apply build-typescript metadata))]
+        var-names (map :name metadata)]
     (if-let [error (check-metadata metadata)]
-      error
-      (try
-        (do (compile typescript filename)
-            nil)
-        (catch js/Error e (.-message e))))))
+      [error]
+      (let [[correct-exprs incorrect-exprs] (->> tags
+                                                 (mapcat #(extract-expressions % var-names))
+                                                 ((juxt remove filter) insta/failure?))
+            typescript (build-typescript metadata correct-exprs)
+            compilation-error (try-compile typescript filename)]
+        (->> (conj incorrect-exprs
+                   compilation-error)
+             (remove nil?))))))
 
 (defn verify-templates [glob-pattern]
   (-> (get-file-contents glob-pattern)
@@ -63,21 +66,18 @@
 
 (defn process-results [results]
   (let [errored-files (->> results
-                           (filter (fn [[_ error]]
-                                     error)))]
+                           (remove (fn [[_ errors]]
+                                     (empty? errors))))]
     (if (not (empty? errored-files))
       (do (println "Some templates failed the type check:\r\n")
-          (doseq [[filename error] errored-files]
+          (doseq [[filename errors] errored-files]
             (println filename)
             (println "------")
-            (println error)
+            (doall (map println errors))
             (println))
           false)
       (do (println (str (count results) " files verified"))
           true))))
-(s/fdef process-results
-        :args (s/alt :results (s/map-of string? number?))
-        :ret boolean?)
 
 (def-cli-opts cli-option-defs
   [{:name "glob"
@@ -100,7 +100,6 @@
                                   :optionList cli-option-defs}])))
       (-> (verify-templates glob)
           (.then process-results)
-          (.then #(.exit node/process (if % 0 1)))
-          ))))
+          (.then #(.exit node/process (if % 0 1)))))))
 
 (set! *main-cli-fn* -main)
