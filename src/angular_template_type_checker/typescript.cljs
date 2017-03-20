@@ -10,6 +10,13 @@
                  (.register (clj->js {:project "./tsconfig.json"
                                       :compilerOptions {:allowUnreachableCode true}}))))
 
+(def ng-global-vars {"$index" "number"
+                     "$first" "boolean"
+                     "$middle" "boolean"
+                     "$last" "boolean"
+                     "$even" "boolean"
+                     "$odd" "boolean"})
+
 (defn get-compiler [filename]
   (let [compile (-> (ts-node)
                     (aget "compile"))]
@@ -24,7 +31,7 @@
 
 (defn get-global-ts-expr [hiccup-element]
   (condp = (first hiccup-element)
-    :binding-expr (let [[_ [_ & binding-symbols] [_ [_ & first-expr-parts]]] hiccup-element
+    :binding-expr (let [[_ [_ & binding-symbols] [_ [_ & first-expr-parts]]] hiccup-element ; todo treat filters as functions, require types
                         binding-expression (apply str first-expr-parts)]
                     (condp = (count binding-symbols)
                                         ; assume filters don't change the structure of the initial expression result
@@ -54,8 +61,12 @@
                           (mapcat #(get-all-tags-of-type :global %))
                           (mapcat rest)
                           (map get-global-ts-expr)
-                          (remove nil?))]
+                          (remove nil?))
+        ng-global-var-bindings (->> ng-global-vars
+                                    (map (fn [[var type]] (str "let " var ":" type ";")))
+                                    (apply str))]
     (->> (concat import-statements
+                 [ng-global-var-bindings]
                  [(build-function-declaration) "{"]
                  global-exprs
                  expression-functions
