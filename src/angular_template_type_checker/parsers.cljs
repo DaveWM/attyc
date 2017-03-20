@@ -19,7 +19,7 @@
    <function> = variable '(' ' '* function-args ' '* ')'
    <function-args> = operation? (<' '* ',' ' '*> operation)*  
    filter = <' '* '|' ' '* symbol ' '* ':' ' '*> expr
-   <template-expr> = expr (filter | expr)*")
+   <template-expr> = expr (filter)*")
 
 
 (def template-expression-parser
