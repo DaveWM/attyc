@@ -13,9 +13,8 @@
    <operator> = '+' | '-' | '*' | '/' | '%' | '=' | '==' | '===' | '||' | '&&' | '>' | '>=' | '<' | '<='
    <prefix-operator> = '+' | '-' | '!'
    <chain> = (variable | function) ('.' chain)?
-   <op-chain> = prefixed-chain ' '* operator ' '* prefixed-chain
    <prefixed-chain> = prefix-operator* chain
-   <operation> = prefixed-chain | op-chain
+   <operation> = prefixed-chain (' '* operator ' '* prefixed-chain ' '*)*
    <function> = variable '(' ' '* function-args ' '* ')'
    <function-args> = operation? (<' '* ',' ' '*> operation)*  
    filter = <' '* '|' ' '* symbol ' '*> (<':' ' '*> expr)?
