@@ -18,7 +18,7 @@
    <operation> = prefixed-chain | op-chain
    <function> = variable '(' ' '* function-args ' '* ')'
    <function-args> = operation? (<' '* ',' ' '*> operation)*  
-   filter = <' '* '|' ' '* symbol ' '* ':' ' '*> expr
+   filter = <' '* '|' ' '* symbol ' '*> (<':' ' '*> expr)?
    <template-expr> = expr (filter)*")
 
 
