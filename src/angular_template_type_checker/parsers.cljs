@@ -8,7 +8,6 @@
    <array> = '[' ((' '* variable ' '*) (',' ' '* variable ' '*)*)? ']' 
    <map> = '{' (kvp (',' ' '* kvp)*)? '}'
    <kvp> = (variable | string) ' '* ':' ' '* variable
-   <tuple> = <'(' ' '*> variable <',' ' '*> variable <' '* ')'>
    expr =  operation | <'(' ' '*> operation <' '* ')'>
    <operator> = '+' | '-' | '*' | '/' | '%' | '=' | '==' | '===' | '||' | '&&' | '>' | '>=' | '<' | '<='
    <prefix-operator> = '+' | '-' | '!'
@@ -31,7 +30,8 @@
   (insta/parser (str "binding-expr = binding-symbols <' '+ 'in' ' '+> binding-value (track-by | alias)?
                      track-by = <' '+ 'track by' ' '+> expr
                      alias = <' '+ 'as' ' '*> expr
-                     binding-symbols = (variable | tuple);
+                     <tuple> = <'(' ' '*> symbol <',' ' '*> symbol <' '* ')'>
+                     binding-symbols = (symbol | tuple);
                      binding-value = template-expr"
                      angular-expression-ebnf)))
 
