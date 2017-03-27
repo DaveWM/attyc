@@ -27,7 +27,7 @@
 
 
 (def ng-repeat-parser
-  (insta/parser (str "binding-expr = binding-symbols <' '+ 'in' ' '+> binding-value (track-by | alias)?
+  (insta/parser (str "binding-expr = <' '*> binding-symbols <' '+ 'in' ' '+> binding-value (track-by | alias)? <' '*>
                      track-by = <' '+ 'track by' ' '+> expr
                      alias = <' '+ 'as' ' '*> expr
                      <tuple> = <'(' ' '*> symbol <',' ' '*> symbol <' '* ')'>
