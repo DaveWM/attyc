@@ -5,12 +5,13 @@
             [angular-template-type-checker.hiccup :refer [get-all-tags-of-type]]
             [angular-template-type-checker.typescript :refer [build-typescript]]
             [angular-template-type-checker.string :refer [split-by-non-repeated]]
-            [angular-template-type-checker.parsers :refer [template-expression-parser ng-repeat-parser single-expression-parser]]
+            [angular-template-type-checker.parsers :refer [template-expression-parser ng-repeat-parser ng-options-parser single-expression-parser]]
             [instaparse.core :as insta]))
 
-(def ng-global-attrs #{:ng-repeat :ng-init})
+(def ng-global-attrs #{:ng-repeat :ng-init :ng-options})
 
-(def ng-attr-parsers (merge  {:ng-repeat ng-repeat-parser}
+(def ng-attr-parsers (merge  {:ng-repeat ng-repeat-parser
+                              :ng-options ng-options-parser}
                              (zipmap [:ng-init :ng-bind :ng-change :ng-if :ng-switch :ng-model :ng-show :ng-hide :ng-style :ng-submit :ng-value :ng-required]
                                      (repeat single-expression-parser))))
 

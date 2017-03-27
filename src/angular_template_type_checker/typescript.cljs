@@ -31,7 +31,8 @@
 
 (defn get-global-ts-expr [hiccup-element]
   (condp = (first hiccup-element)
-    :binding-expr (let [[_ [_ & binding-symbols] [_ [_ & first-expr-parts]]] hiccup-element ; todo treat filters as functions, require types
+    :binding-expr (let [[_ & binding-symbols] (first (get-all-tags-of-type :binding-symbols hiccup-element))
+                        [_ [_ & first-expr-parts]] (first (get-all-tags-of-type :binding-value hiccup-element)) ; todo treat filters as functions, require types
                         binding-expression (apply str first-expr-parts)]
                     (condp = (count binding-symbols)
                                         ; assume filters don't change the structure of the initial expression result
