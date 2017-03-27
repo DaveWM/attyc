@@ -6,3 +6,26 @@
   (if-let [explanation (s/explain-data optionsListSpec options)]
     (throw (Exception. (str "Invalid command line arguments: " explanation)))
     `(def ~var-name ~options)))
+
+(defmacro with-ng-parsers [parser-str]
+  (str parser-str ";"
+       "<variable> = symbol | string | array | map
+        <symbol> = #'[\\w\\$]+'
+        <string> = #'\\'[^\\']*\\'' | #'\\\"[^\\\"]*\\\"'
+        <array> = '[' ((' '* variable ' '*) (',' ' '* variable ' '*)*)? ']' 
+        <map> = '{' (kvp (',' ' '* kvp)*)? '}'
+        <kvp> = (variable | string) ' '* ':' ' '* variable
+        expr =  operation | <'(' ' '*> operation <' '* ')'>
+        <operator> = '+' | '-' | '*' | '/' | '%' | '=' | '==' | '===' | '||' | '&&' | '>' | '>=' | '<' | '<='
+        <prefix-operator> = '+' | '-' | '!'
+        <chain> = (variable | function) ('.' chain)?
+        <op-chain> = prefixed-chain ' '* operator ' '* prefixed-chain
+        <prefixed-chain> = prefix-operator* chain
+        <operation> = prefixed-chain | op-chain
+        <function> = variable '(' ' '* function-args ' '* ')'
+        <function-args> = operation? (<' '* ',' ' '*> operation)* 
+        filter = <' '* '|' ' '* symbol ' '*> (<':' ' '*> expr)?
+        <template-expr> = expr (filter)*
+        binding-symbols = (symbol | tuple);
+        binding-value = template-expr
+        <tuple> = <'(' ' '*> symbol <',' ' '*> symbol <' '* ')'>"))
