@@ -1,6 +1,6 @@
 # ATTyC
 
-### Pre-Alpha
+### Currently in Alpha
 
 **A**ngular**T**emplate**Ty**pe**C**hecker is a command line tool that uses typescript to verify angularjs templates. You supply the names and types of the variables that the template uses, and attyc will find any bugs in your template.
 
@@ -22,8 +22,9 @@ Once you've added this metadata, run `attyc [glob matching template files]`
 ## Known Issues
 
 * Attyc works best when you use the "controller as" syntax. If you don't, you'll have to specify every single scope variable you use in the template metadata (ain't nobody got time for that).
-* Other than in the `ng-init` and `ng-repeat` attributes, variable declaration is ignored.
+* Other than in the `ng-init`, `ng-repeat` and `ng-options` attributes, variable declaration is not allowed. For example, `{{ x = 10 }}` will cause an error.
 * Attyc assumes that if an attribute contains a variable name, then it is an angular expression. This may not always be true.
+* Filters are not type checked (although arguments to filters are). This could potentially lead to attyc missing errors. This may change in future.
 
 ## Building it yourself
 
