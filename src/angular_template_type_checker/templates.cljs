@@ -9,10 +9,11 @@
             [instaparse.core :as insta]))
 
 (def ng-global-attrs #{:ng-repeat :ng-init :ng-options})
+(def ng-attrs #{:ng-app :ng-init :ng-bind :ng-non-bindable :ng-bind-template :ng-bind-html :ng-change :ng-checked :ng-class :ng-cloak :ng-click :ng-controller :ng-disabled :ng-form :ng-href :ng-include :ng-if :ng-switch :ng-model :ng-readonly :ng-selected :ng-show :ng-src :ng-submit :ng-value :ng-required :ng-style :ng-pattern :ng-maxlength :ng-minlength :ng-classeven :ng-classodd :ng-cut :ng-copy :ng-paste :ng-list :ng-open})
 
 (def ng-attr-parsers (merge  {:ng-repeat ng-repeat-parser
                               :ng-options ng-options-parser}
-                             (zipmap [:ng-init :ng-bind :ng-change :ng-if :ng-switch :ng-model :ng-show :ng-hide :ng-style :ng-submit :ng-value :ng-required]
+                             (zipmap ng-attrs
                                      (repeat single-expression-parser))))
 
 (defn extract-metadata [tags]
