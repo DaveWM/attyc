@@ -12,9 +12,9 @@
        "<variable> = symbol | string | array | map
         <symbol> = #'[\\w\\$]+'
         <string> = #'\\'[^\\']*\\'' | #'\\\"[^\\\"]*\\\"'
-        <array> = '[' ((' '* variable ' '*) (',' ' '* variable ' '*)*)? ']' 
+        <array> = '[' ((' '* expr ' '*) (',' ' '* expr ' '*)*)? ']' 
         <map> = '{' <' '*> (kvp <' '*> (',' <' '*> kvp)*)? <' '*> '}'
-        <kvp> = (variable | string) ' '* ':' ' '* variable
+        <kvp> = (variable | string) ' '* ':' ' '* expr
         expr =  operation | <'(' ' '*> operation <' '* ')'>
         <operator> = '+' | '-' | '*' | '/' | '%' | '=' | '==' | '===' | '||' | '&&' | '>' | '>=' | '<' | '<='
         <prefix-operator> = '+' | '-' | '!'
