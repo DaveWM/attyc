@@ -42,7 +42,11 @@
   (println "verifying " filename)
   (let [tags (->> html
                   parse-html
-                  flatten-hickory)
+                  flatten-hickory
+                  (filter map?)
+                  (map #(update % :attrs (comp (partial into {})
+                                               (partial map (fn [[k v]]
+                                                              [k (str/replace v #"\n" "")]))))))
         metadata (extract-metadata tags)
         var-names (map :name metadata)]
     (if-let [error (check-metadata metadata)]
