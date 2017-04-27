@@ -23,7 +23,7 @@
         <prefixed-chain> = prefix-operator* chain
         <operation> = prefixed-chain | op-chain
         <function> = variable '(' ' '* function-args ' '* ')'
-        <function-args> = operation? (<' '* ',' ' '*> operation)* 
+        <function-args> = operation? (<' '*> ',' <' '*> operation)* 
         filter = <' '* '|' ' '* symbol ' '*> (<':' ' '*> expr)?
         <template-expr> = expr (filter)*
         binding-symbols = (symbol | tuple);
