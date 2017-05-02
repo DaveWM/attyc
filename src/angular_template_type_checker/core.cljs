@@ -17,6 +17,7 @@
 (def fs (node/require "fs"))
 (def command-line-args (node/require "command-line-args"))
 (def getUsage (node/require "command-line-usage"))
+(def known-errors-map {:no-metadata "Could not find metadata"})
 
 (defn get-file-contents [glob-pattern]
   (-> (js/Promise. (fn [res rej]
@@ -34,7 +35,7 @@
 (defn check-metadata [metadata]
   "Checks whether the given metadata is valid. Returns nil if it is, or an error string if not"
   (if (nil? metadata)
-    "Could not find metadata"
+    :no-metadata
     (when-let [spec-error (s/explain-data metadata-spec metadata)]
       (str "Error with metadata: " (:cljs.spec/problems spec-error)))))
 
@@ -68,6 +69,11 @@
                            [filename (verify-template template-html filename)]))
                     (into {}))))))
 
+(defn format-error-messages [errors-map results]
+  (map (fn [[filename errors]]
+         [filename (map #(or (get errors-map %) %) errors)])
+       results))
+
 (defn process-results [results]
   (let [errored-files (->> results
                            (remove (fn [[_ errors]]
@@ -93,16 +99,27 @@
    {:name "help"
     :alias "h"
     :type js/Boolean
-    :description "Shows a help message"}])
+    :description "Shows a help message"}
+   {:name "ignore-no-metadata"
+    :alias "m"
+    :type js/Boolean
+    :description "Ignore files with no metadata"}])
 
 (defn -main []
-  (let [{:keys [glob help]} (js->clj (command-line-args (clj->js cli-option-defs)) :keywordize-keys true)]
+  (let [{:keys [glob help ignore-no-metadata]} (js->clj (command-line-args (clj->js cli-option-defs)) :keywordize-keys true)]
     (if help
       (print (getUsage (clj->js [{:header "ATTyC"
                                   :content "A command line tool for checking typed angularjs templates"}
                                  {:header "Options"
                                   :optionList cli-option-defs}])))
       (-> (verify-templates glob)
+          (.then (fn [results]
+                   (if ignore-no-metadata
+                     (map (fn [[filename errors]]
+                            [filename (remove #(= % :no-metadata) errors)])
+                          results)
+                     results)))
+          (.then (partial format-error-messages known-errors-map))
           (.then process-results)
           (.then #(.exit node/process (if % 0 1)))))))
 
