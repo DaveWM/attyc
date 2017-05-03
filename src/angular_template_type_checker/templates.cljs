@@ -18,12 +18,13 @@
 
 (defn extract-metadata [tags]
   "Gets the metadata for a template. The metadata should be stored in the first comment tag in the template"
-  (let [comment-tag (->> tags
-                         (filter #(= :comment (:type %)))
-                         first)
-        model-info-edn (->> (:content comment-tag)
-                            (filter string?)
-                            (apply str))]
+  (let [first-tag (->> tags
+                       (filter #(#{:element :comment} (:type %)))
+                       first)
+        model-info-edn (when (= :comment (:type first-tag))
+                         (->> (:content first-tag)
+                              (filter string?)
+                              (apply str)))]
     (when model-info-edn
       (reader/read-string model-info-edn))))
 

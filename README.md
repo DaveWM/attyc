@@ -11,7 +11,7 @@
 
 To install run `npm install -g attyc`. For help, run `attyc --help`.
 
-Attyc needs some metadata about your template to work out the types of template variables. It expects the first comment in the template to contain an [edn](https://github.com/edn-format/edn) vector of maps containing the keys `:name` (variable name), `:type` (variable type) and optionally `:import` (path to import the type from). For example:
+Attyc needs some metadata about your template to work out the types of template variables. It expects there to be a comment at the very top of the template, containing an [edn](https://github.com/edn-format/edn) vector of maps containing the keys `:name` (variable name), `:type` (variable type) and optionally `:import` (path to import the type from). For example:
 
 ```html
 <!-- [{:name "ctrl" :type "Controller" :import "./controller"}] -->
