@@ -52,7 +52,7 @@
                 (when (and (not (insta/failure? parsed))
                            (->> parsed
                                 (get-all-tags-of-type :symbol)
-                                (mapcat :content)
+                                (map second)
                                 (some #(= % var-name))))
                   (single-expression-parser attr)))))
        (remove nil?)))
