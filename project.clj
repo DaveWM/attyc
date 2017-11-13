@@ -31,7 +31,7 @@
                         :source-paths ["src"]
                         :figwheel true
                         :compiler {
-                                   :main angular-template-type-checker.core
+                                   :main angular-template-type-checker.dev
                                    :output-to "dist/main.js"
                                    :output-dir "target/server_dev"
                                    :target :nodejs
