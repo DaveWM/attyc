@@ -14,7 +14,7 @@
         <string> = #'\\'[^\\']*\\'' | #'\\\"[^\\\"]*\\\"'
         <array> = '[' ((' '* expr ' '*) (',' ' '* expr ' '*)*)? ']' 
         <map> = '{' <' '*> (kvp <' '*> (',' <' '*> kvp)*)? <' '*> '}'
-        <kvp> = (variable | string) ' '* ':' ' '* expr
+        <kvp> = ((symbol | string) ' '* ':' ' '* expr) | symbol
         expr =  operation | <'(' ' '*> operation <' '* ')'>
         <operator> = '+' | '-' | '*' | '/' | '%' | '=' | '==' | '===' | '||' | '&&' | '>' | '>=' | '<' | '<='
         <prefix-operator> = '+' | '-' | '!'
