@@ -6,4 +6,4 @@
 (defn fig-stop! [] (ra/stop-figwheel!))
 
 (defn start! [] (do (fig-start!)
-                   (cljs-repl)))
+                    (cljs-repl)))
