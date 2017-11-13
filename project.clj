@@ -45,4 +45,6 @@
                                    :output-dir "dist"
                                    :target :nodejs
                                    :optimizations :simple
-                                   :source-map "dist/main.map.js"}}]})
+                                   :source-map "dist/main.map.js"}}]}
+
+  :jvm-opts ["--add-modules" "java.xml.bind"])
