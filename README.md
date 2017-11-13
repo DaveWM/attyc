@@ -29,6 +29,7 @@ Once you've added this metadata, run `attyc [glob matching template files]`
 ## Building it yourself
 
 * Clone the repo
+* Run `npm install`
 * Make sure you have leiningen installed
 * Run `lein figwheel`
 * In another terminal, run `node dist/main.js`
