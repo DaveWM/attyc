@@ -8,8 +8,9 @@
             [angular-template-type-checker.typescript :refer [try-compile build-typescript]]
             [angular-template-type-checker.templates :refer [extract-expressions extract-metadata]]
             [angular-template-type-checker.specs :refer [metadata-spec]]
+            [angular-template-type-checker.logging :refer [debug info error]]
             [instaparse.core :as insta])
-  (:require-macros [angular-template-type-checker.macros :refer [def-cli-opts]]))
+  (:require-macros [angular-template-type-checker.macros :refer [def-cli-opts with-log-level]]))
 
 (set! js/DOMParser (.-DOMParser (node/require "xmldom")))
 (node/enable-util-print!)
@@ -40,7 +41,7 @@
       (str "Error with metadata: " (:cljs.spec/problems spec-error)))))
 
 (defn verify-template [html filename]
-  (println "verifying " filename)
+  (info "verifying " filename)
   (let [tags (->> html
                   parse-html
                   flatten-hickory
@@ -57,6 +58,8 @@
                                                  ((juxt remove filter) insta/failure?))
             typescript (build-typescript metadata correct-exprs)
             compilation-error (try-compile typescript filename)]
+        (debug "generated typescript:")
+        (debug typescript)
         (->> (conj incorrect-exprs
                    compilation-error)
              (remove nil?))))))
@@ -79,14 +82,14 @@
                            (remove (fn [[_ errors]]
                                      (empty? errors))))]
     (if (not (empty? errored-files))
-      (do (println "Some templates failed the type check:\r\n")
+      (do (info "Some templates failed the type check:\r\n")
           (doseq [[filename errors] errored-files]
-            (println filename)
-            (println "------")
-            (doall (map println errors))
-            (println))
+            (error filename)
+            (error "------")
+            (doall (map error errors))
+            (error ""))
           false)
-      (do (println (str (count results) " files verified"))
+      (do (info (str (count results) " files verified"))
           true))))
 
 (def-cli-opts cli-option-defs
@@ -103,24 +106,29 @@
    {:name "ignore-no-metadata"
     :alias "m"
     :type js/Boolean
-    :description "Ignore files with no metadata"}])
+    :description "Ignore files with no metadata"}
+   {:name "verbose"
+    :alias "v"
+    :type js/Boolean
+    :description "Enable verbose logging. Will log generated typescript."}])
 
 (defn -main []
-  (let [{:keys [glob help ignore-no-metadata]} (js->clj (command-line-args (clj->js cli-option-defs)) :keywordize-keys true)]
+  (let [{:keys [glob help ignore-no-metadata verbose]} (js->clj (command-line-args (clj->js cli-option-defs)) :keywordize-keys true)]
     (if help
       (print (getUsage (clj->js [{:header "ATTyC"
                                   :content "A command line tool for checking typed angularjs templates"}
                                  {:header "Options"
                                   :optionList cli-option-defs}])))
-      (-> (verify-templates glob)
-          (.then (fn [results]
-                   (if ignore-no-metadata
-                     (map (fn [[filename errors]]
-                            [filename (remove #(= % :no-metadata) errors)])
-                          results)
-                     results)))
-          (.then (partial format-error-messages known-errors-map))
-          (.then process-results)
-          (.then #(.exit node/process (if % 0 1)))))))
+      (with-log-level (if verbose :debug :info)
+        (-> (verify-templates glob)
+            (.then (fn [results]
+                     (if ignore-no-metadata
+                       (map (fn [[filename errors]]
+                              [filename (remove #(= % :no-metadata) errors)])
+                            results)
+                       results)))
+            (.then (partial format-error-messages known-errors-map))
+            (.then process-results)
+            (.then #(.exit node/process (if % 0 1))))))))
 
 (set! *main-cli-fn* -main)

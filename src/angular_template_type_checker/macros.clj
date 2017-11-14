@@ -28,3 +28,7 @@
         binding-symbols = (symbol | tuple);
         binding-value = template-expr
         <tuple> = <'(' ' '*> symbol <',' ' '*> symbol <' '* ')'>"))
+
+(defmacro with-log-level [level & body]
+  `(binding [angular-template-type-checker.logging/*log-level* ~level]
+     ~@body))
