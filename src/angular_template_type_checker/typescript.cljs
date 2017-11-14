@@ -6,9 +6,7 @@
             [angular-template-type-checker.specs :refer [metadata-spec]]
             [angular-template-type-checker.hiccup :refer [get-all-tags-of-type flatten-hiccup get-content]]))
 
-(def ts-node (-> (node/require "ts-node")
-                 (.register (clj->js {:project "./tsconfig.json"
-                                      :compilerOptions {:allowUnreachableCode true}}))))
+(def ts-node (node/require "ts-node"))
 
 (def ng-global-vars {"$index" "number"
                      "$first" "boolean"
@@ -17,15 +15,22 @@
                      "$even" "boolean"
                      "$odd" "boolean"})
 
-(defn get-compiler [filename]
-  (let [compile (-> (ts-node)
-                    (aget "compile"))]
-    (fn [code]
-      (compile code (str filename ".ts") 0))))
+(defn get-compiler
+  ([filename] (get-compiler filename nil))
+  ([filename compiler-options]
+   (let [options (merge {:project "./tsconfig.json"
+                         :compilerOptions {:allowUnreachableCode true}}
+                        compiler-options)
+         registered-ts-node (-> ts-node
+                                (.register (clj->js options)))
+         compile (-> (registered-ts-node)
+                     (aget "compile"))]
+     (fn [code]
+       (compile code (str filename ".ts") 0)))))
 
-(defn try-compile [code filename]
+(defn try-compile [code compiler]
   "returns nil or an error"
-  (try (do ((get-compiler filename) code)
+  (try (do (compiler code)
            nil)
        (catch js/Error e (.-message e))))
 

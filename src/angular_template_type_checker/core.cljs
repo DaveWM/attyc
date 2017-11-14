@@ -5,7 +5,7 @@
             [clojure.string :as str]
             [cljs.spec :as s]
             [angular-template-type-checker.hickory :refer [parse-html flatten-hickory]]
-            [angular-template-type-checker.typescript :refer [try-compile build-typescript]]
+            [angular-template-type-checker.typescript :refer [try-compile build-typescript get-compiler]]
             [angular-template-type-checker.templates :refer [extract-expressions extract-metadata]]
             [angular-template-type-checker.specs :refer [metadata-spec]]
             [angular-template-type-checker.logging :refer [debug info error]]
@@ -40,7 +40,7 @@
     (when-let [spec-error (s/explain-data metadata-spec metadata)]
       (str "Error with metadata: " (:cljs.spec/problems spec-error)))))
 
-(defn verify-template [html filename]
+(defn verify-template [html filename & [ts-config-path]]
   (info "verifying " filename)
   (let [tags (->> html
                   parse-html
@@ -57,19 +57,20 @@
                                                  (mapcat #(extract-expressions % var-names))
                                                  ((juxt remove filter) insta/failure?))
             typescript (build-typescript metadata correct-exprs)
-            compilation-error (try-compile typescript filename)]
+            compiler (get-compiler filename (when ts-config-path {:project ts-config-path}))
+            compilation-error (try-compile typescript compiler)]
         (debug "generated typescript:")
         (debug typescript)
         (->> (conj incorrect-exprs
                    compilation-error)
              (remove nil?))))))
 
-(defn verify-templates [glob-pattern]
+(defn verify-templates [glob-pattern & [ts-config-path]]
   (-> (get-file-contents glob-pattern)
       (.then (fn [data]
                (->> data
                     (map (fn [[template-html filename]]
-                           [filename (verify-template template-html filename)]))
+                           [filename (verify-template template-html filename ts-config-path)]))
                     (into {}))))))
 
 (defn format-error-messages [errors-map results]
@@ -110,17 +111,22 @@
    {:name "verbose"
     :alias "v"
     :type js/Boolean
-    :description "Enable verbose logging. Will log generated typescript."}])
+    :description "Enable verbose logging. Will log generated typescript."}
+   {:name "ts-config-path"
+    :alias "c"
+    :type js/String
+    :description "The relative path to your tsconfig file. Defaults to './tsconfig.json'."
+    :typeLabel "[underline]{path}"}])
 
 (defn -main []
-  (let [{:keys [glob help ignore-no-metadata verbose]} (js->clj (command-line-args (clj->js cli-option-defs)) :keywordize-keys true)]
+  (let [{:keys [glob help ignore-no-metadata verbose ts-config-path]} (js->clj (command-line-args (clj->js cli-option-defs)) :keywordize-keys true)]
     (if help
       (print (getUsage (clj->js [{:header "ATTyC"
                                   :content "A command line tool for checking typed angularjs templates"}
                                  {:header "Options"
                                   :optionList cli-option-defs}])))
       (with-log-level (if verbose :debug :info)
-        (-> (verify-templates glob)
+        (-> (verify-templates glob ts-config-path)
             (.then (fn [results]
                      (if ignore-no-metadata
                        (map (fn [[filename errors]]
