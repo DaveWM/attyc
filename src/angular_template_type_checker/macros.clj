@@ -29,6 +29,8 @@
         binding-value = template-expr
         <tuple> = <'(' ' '*> symbol <',' ' '*> symbol <' '* ')'>"))
 
-(defmacro with-log-level [level & body]
-  `(binding [angular-template-type-checker.logging/*log-level* ~level]
+(defmacro with-log-level
+  "Runs the given *synchronous* code with the specified logging level. It *will not* work with promises/callbacks, see https://groups.google.com/forum/#!topic/clojure/6cmnkHmHBNw"
+  [level & body]
+  `(with-redefs [angular-template-type-checker.logging/*log-level* ~level]
      ~@body))

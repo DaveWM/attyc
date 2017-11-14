@@ -125,16 +125,18 @@
                                   :content "A command line tool for checking typed angularjs templates"}
                                  {:header "Options"
                                   :optionList cli-option-defs}])))
-      (with-log-level (if verbose :debug :info)
-        (-> (verify-templates glob ts-config-path)
-            (.then (fn [results]
-                     (if ignore-no-metadata
-                       (map (fn [[filename errors]]
-                              [filename (remove #(= % :no-metadata) errors)])
-                            results)
-                       results)))
-            (.then (partial format-error-messages known-errors-map))
-            (.then process-results)
-            (.then #(.exit node/process (if % 0 1))))))))
+      (-> (get-file-contents glob)
+          (.then (fn [data]
+                   (with-log-level (if verbose :debug :info)
+                     (let [results (->> data
+                                        (map (fn [[template-html filename]]
+                                               [filename (verify-template template-html filename ts-config-path)]))
+                                        (map (fn [[filename errors]]
+                                               [filename (if ignore-no-metadata
+                                                           errors
+                                                           (remove #(= % :no-metadata) errors))]))
+                                        (format-error-messages known-errors-map)
+                                        (process-results))]))))
+          (.then #(.exit node/process (if % 0 1)))))))
 
 (set! *main-cli-fn* -main)
