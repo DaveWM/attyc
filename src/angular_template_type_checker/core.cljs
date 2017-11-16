@@ -137,6 +137,7 @@
                                                            (remove #(= % :no-metadata) errors))]))
                                         (format-error-messages known-errors-map)
                                         (process-results))]))))
-          (.then #(.exit node/process (if % 0 1)))))))
+          (.then #(.exit node/process (if % 0 1)))
+          (.catch #(error (.-message %)))))))
 
 (set! *main-cli-fn* -main)

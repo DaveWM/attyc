@@ -12,4 +12,5 @@
 (def debug (partial log :debug))
 (def info (partial log :info))
 (def warning (partial log :warning))
-(def error (partial log :error))
+(def error (comp (partial log :error)
+                 (partial str "ERROR: ")))
